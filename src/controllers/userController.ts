@@ -54,8 +54,10 @@ class UserController {
         if (!uid) {
           return res.status(400).json({ success: false, message: 'Falta uid' });
         }
-        // No permitir que un admin se desactive a sí mismo (ejemplo básico)
-        // if (req.user.uid === uid) return res.status(403).json({ success: false, message: 'No puedes desactivar tu propia cuenta' });
+        // No permitir que un admin se desactive a sí mismo
+        if (req.user?.uid === uid) {
+          return res.status(403).json({ success: false, message: 'No puedes desactivar tu propia cuenta' });
+        }
         await admin.auth().updateUser(uid, { disabled: true });
         // TODO: Actualizar en base de datos si aplica
         return res.json({ success: true, message: 'Usuario desactivado' });

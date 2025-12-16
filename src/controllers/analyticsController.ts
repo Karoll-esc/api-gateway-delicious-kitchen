@@ -14,12 +14,18 @@ const orderServiceClient: IServiceClient = new BaseHttpClient(
   config.services.orderService.timeout
 );
 
+/**
+ * Valida que el usuario autenticado tenga el rol requerido
+ * 
+ * Esta función está obsoleta ya que la validación de roles
+ * se realiza ahora mediante el middleware requireRole(['ADMIN'])
+ * 
+ * @deprecated Usar middleware requireRole(['ADMIN']) en las rutas
+ */
 function hasRole(req: Request) {
-  // TODO: En producción, verificar roles reales desde JWT
-  // Temporalmente permitir acceso para pruebas
+  // La validación de roles ahora se realiza en el middleware requireRole
+  // Esta función se mantiene temporalmente para compatibilidad
   return true;
-  // const roles = (req as any).user?.roles || [];
-  // return roles.includes('manager') || roles.includes('admin');
 }
 
 export async function getAdminAnalytics(req: Request, res: Response) {

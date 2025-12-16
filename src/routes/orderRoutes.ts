@@ -5,8 +5,14 @@ import {
   cancelOrder,
   getOrderCancellation
 } from '../controllers/orderController';
+import { verifyFirebaseToken } from '../middleware/verifyFirebaseToken';
 
 const router = Router();
+
+// Aplicar autenticación a todas las rutas de pedidos
+// Cualquier usuario autenticado puede crear y gestionar sus propios pedidos
+// La validación de propiedad del pedido se realiza en los controladores
+router.use(verifyFirebaseToken);
 
 // POST /orders - Crear un nuevo pedido
 router.post('/', createOrder);

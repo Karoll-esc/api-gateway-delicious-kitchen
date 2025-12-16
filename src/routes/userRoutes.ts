@@ -1,8 +1,14 @@
 import { Router } from 'express';
 import userController from '../controllers/userController';
+import { verifyFirebaseToken } from '../middleware/verifyFirebaseToken';
+import { requireRole } from '../middleware/requireRole';
 
 const router = Router();
 
+// Aplicar autenticación y autorización a todas las rutas de usuarios
+// Solo los administradores pueden gestionar usuarios
+router.use(verifyFirebaseToken);
+router.use(requireRole(['ADMIN']));
 
 // GET /users?name=&email=&role=&page=&limit=
 router.get('/', userController.listUsers);

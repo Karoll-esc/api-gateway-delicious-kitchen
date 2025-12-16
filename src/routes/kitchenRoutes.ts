@@ -5,8 +5,15 @@ import {
   startPreparing, 
   markAsReady 
 } from '../controllers/kitchenController';
+import { verifyFirebaseToken } from '../middleware/verifyFirebaseToken';
+import { requireRole } from '../middleware/requireRole';
 
 const router = Router();
+
+// Aplicar autenticación y autorización a todas las rutas de cocina
+// Administradores y personal de cocina pueden acceder
+router.use(verifyFirebaseToken);
+router.use(requireRole(['ADMIN', 'KITCHEN']));
 
 // GET /kitchen/orders - Obtener todos los pedidos en cocina
 router.get('/orders', getKitchenOrders);
