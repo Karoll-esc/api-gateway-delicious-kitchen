@@ -221,6 +221,43 @@ npm run test:watch
 - `npm run build` - Compila TypeScript a JavaScript
 - `npm start` - Inicia el servidor en producción
 - `npm run lint` - Ejecuta ESLint
+- `npm run set-claim` - Asigna custom claims a usuarios (ver sección Scripts Administrativos)
+
+## 🔐 Scripts Administrativos
+
+El API Gateway incluye scripts administrativos para operaciones privilegiadas que deben ejecutarse **únicamente desde el servidor**.
+
+### Asignación de Custom Claims
+
+Permite asignar roles (`admin`, `kitchen`, `client`) y otros custom claims a usuarios en Firebase Authentication.
+
+**Ubicación:** `scripts/setCustomUserClaim.ts`
+
+**Uso:**
+```bash
+npm run set-claim <userId> <claimKey> <claimValue>
+```
+
+**Ejemplos:**
+```bash
+# Asignar rol de administrador
+npm run set-claim vK9WOe6wvKYLRg0woDChXlsvqxy1 role admin
+
+# Asignar rol de cocina
+npm run set-claim abc123xyz456 role kitchen
+
+# Asignar rol de cliente
+npm run set-claim user789client role client
+```
+
+**Documentación completa:** Ver [scripts/README.md](scripts/README.md) para:
+- Descripción de custom claims
+- Roles del sistema (admin, kitchen, client)
+- Ejemplos de uso detallados
+- Troubleshooting
+- Mejores prácticas de seguridad
+
+⚠️ **IMPORTANTE:** Estos scripts requieren credenciales de Firebase Admin SDK y NO deben ejecutarse desde el frontend.
 
 ## 🔒 Validaciones
 
