@@ -5,6 +5,7 @@ import orderRoutes from './routes/orderRoutes';
 import kitchenRoutes from './routes/kitchenRoutes';
 import userRoutes from './routes/userRoutes';
 import reviewRoutes from './routes/reviewRoutes';
+import surveyRoutes from './routes/surveyRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
 import { config, validateConfig } from './config';
 
@@ -32,6 +33,7 @@ app.use('/orders', orderRoutes);
 app.use('/kitchen', kitchenRoutes);
 app.use('/users', userRoutes);
 app.use('/reviews', reviewRoutes);
+app.use('/surveys', surveyRoutes);
 app.use('/', analyticsRoutes);
 
 app.get('/health', async (req: Request, res: Response) => {

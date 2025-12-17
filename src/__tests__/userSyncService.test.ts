@@ -63,7 +63,6 @@ describe('UserSyncService', () => {
       expect(normalizeRole('ADMIN')).toBe('ADMIN');
       expect(normalizeRole('Admin')).toBe('ADMIN');
       expect(normalizeRole('kitchen')).toBe('KITCHEN');
-      expect(normalizeRole('waiter')).toBe('WAITER');
     });
 
     it('debería retornar null para roles inválidos', () => {
@@ -156,7 +155,7 @@ describe('UserSyncService', () => {
       };
 
       await expect(userSyncService.createUser(userData)).rejects.toThrow(
-        'Rol inválido: INVALID. Roles permitidos: ADMIN, KITCHEN, WAITER'
+        'Rol inválido: INVALID. Roles permitidos: ADMIN, KITCHEN'
       );
 
       // No debe llamar a Auth ni Firestore
@@ -176,7 +175,7 @@ describe('UserSyncService', () => {
       mockAuth.getUser.mockResolvedValue({ 
         uid: 'user-123',
         displayName: 'Test User',
-        customClaims: { role: 'WAITER' }
+        customClaims: { role: 'KITCHEN' }
       });
       mockAuth.setCustomUserClaims.mockResolvedValue(undefined);
       mockDocRef.get.mockResolvedValue({ exists: true });
@@ -202,7 +201,7 @@ describe('UserSyncService', () => {
         email: 'test@example.com',
         displayName: 'Test User',
         disabled: false,
-        customClaims: { role: 'WAITER' }
+        customClaims: { role: 'KITCHEN' }
       });
       mockAuth.updateUser.mockResolvedValue(undefined);
       mockDocRef.get.mockResolvedValue({ exists: false });
@@ -327,7 +326,7 @@ describe('UserSyncService', () => {
       mockCollection.get.mockResolvedValue({
         docs: [
           { id: 'user-1', data: () => ({ uid: 'user-1', email: 'user1@test.com', name: 'User 1', role: 'ADMIN', status: 'active' }) },
-          { id: 'user-orphan', data: () => ({ uid: 'user-orphan', email: 'orphan@test.com', name: 'Orphan', role: 'WAITER', status: 'active' }) }
+          { id: 'user-orphan', data: () => ({ uid: 'user-orphan', email: 'orphan@test.com', name: 'Orphan', role: 'KITCHEN', status: 'active' }) }
         ]
       });
 
