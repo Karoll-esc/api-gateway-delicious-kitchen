@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { config } from '../config';
 import { BaseHttpClient } from '../services/baseHttpClient';
 import { verifyFirebaseToken } from '../middleware/verifyFirebaseToken';
-import { requireAdmin } from '../middleware/requireAdmin';
+import { requireRole } from '../middleware/requireRole';
 
 /**
  * Rutas para el sistema de reseñas (proxy a order-service)
@@ -68,7 +68,7 @@ router.get('/', async (req: Request, res: Response) => {
  * GET /admin/reviews - Obtener todas las reseñas (ADMIN - PROTEGIDA)
  * IMPORTANTE: Debe ir ANTES de /:id para que no lo capture
  */
-router.get('/admin/reviews', verifyFirebaseToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/admin/reviews', verifyFirebaseToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
   try {
     const { page, limit } = req.query;
     const queryParams = new URLSearchParams();
@@ -110,7 +110,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 /**
  * PATCH /reviews/:id/status - Cambiar estado de reseña (ADMIN - PROTEGIDA)
  */
-router.patch('/:id/status', verifyFirebaseToken, requireAdmin, async (req: Request, res: Response) => {
+router.patch('/:id/status', verifyFirebaseToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const response = await httpClient.patch<any>(
