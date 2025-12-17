@@ -15,9 +15,8 @@ import admin from '../src/config/firebase';
  * Roles permitidos en el sistema
  * - admin: Acceso completo a todas las funcionalidades
  * - kitchen: Acceso solo al panel de cocina
- * - client: Usuario registrado con historial y perfil
  */
-const ALLOWED_ROLES = ['admin', 'kitchen', 'client'] as const;
+const ALLOWED_ROLES = ['admin', 'kitchen'] as const;
 type AllowedRole = typeof ALLOWED_ROLES[number];
 
 /**

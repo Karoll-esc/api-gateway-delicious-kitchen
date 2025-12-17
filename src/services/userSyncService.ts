@@ -37,7 +37,7 @@ class UserSyncService {
     // Validar y normalizar el rol
     const normalizedRole = normalizeRole(role);
     if (!normalizedRole) {
-      throw new Error(`Rol inválido: ${role}. Roles permitidos: ADMIN, KITCHEN, WAITER`);
+      throw new Error(`Rol inválido: ${role}. Roles permitidos: ADMIN, KITCHEN`);
     }
 
     let userRecord: admin.auth.UserRecord | null = null;
@@ -147,7 +147,7 @@ class UserSyncService {
           uid,
           email: authUser.email || '',
           name: name || authUser.displayName || '',
-          role: normalizedRole || previousRole || 'WAITER',
+          role: normalizedRole || previousRole || 'KITCHEN',
           status: authUser.disabled ? 'inactive' : 'active',
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
@@ -203,7 +203,7 @@ class UserSyncService {
           uid,
           email: userRecord.email || '',
           name: userRecord.displayName || '',
-          role: userRecord.customClaims?.role || 'WAITER',
+          role: userRecord.customClaims?.role || 'KITCHEN',
           status: 'inactive',
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
@@ -254,7 +254,7 @@ class UserSyncService {
           uid,
           email: userRecord.email || '',
           name: userRecord.displayName || '',
-          role: userRecord.customClaims?.role || 'WAITER',
+          role: userRecord.customClaims?.role || 'KITCHEN',
           status: 'active',
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
