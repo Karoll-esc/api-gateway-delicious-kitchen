@@ -2,16 +2,20 @@ import { Router } from 'express';
 import { Request, Response } from 'express';
 import { config } from '../config';
 import { BaseHttpClient } from '../services/baseHttpClient';
+import { verifyFirebaseToken } from '../middleware/verifyFirebaseToken';
+import { requireRole } from '../middleware/requireRole';
 
 /**
  * Rutas para el sistema de reseñas (proxy a order-service)
  *
- * Endpoints:
- * - POST /reviews - Crear reseña
- * - GET /reviews - Listar reseñas aprobadas
- * - GET /reviews/:id - Obtener reseña específica
- * - PATCH /reviews/:id/status - Cambiar estado (admin)
- * - GET /admin/reviews - Listar todas las reseñas (admin)
+ * Endpoints públicos:
+ * - POST /reviews - Crear reseña (PÚBLICO)
+ * - GET /reviews - Listar reseñas aprobadas (PÚBLICO)
+ * - GET /reviews/:id - Obtener reseña específica (PÚBLICO)
+ * 
+ * Endpoints protegidos (admin):
+ * - PATCH /reviews/:id/status - Cambiar estado (ADMIN)
+ * - GET /admin/reviews - Listar todas las reseñas (ADMIN)
  */
 const router = Router();
 
@@ -19,7 +23,7 @@ const ORDER_SERVICE_URL = config.services.orderService.url;
 const httpClient = new BaseHttpClient(ORDER_SERVICE_URL);
 
 /**
- * POST /reviews - Crear nueva reseña
+ * POST /reviews - Crear nueva reseña (PÚBLICO)
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
@@ -37,7 +41,7 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 /**
- * GET /reviews - Obtener reseñas aprobadas
+ * GET /reviews - Obtener reseñas aprobadas (PÚBLICO)
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -61,10 +65,10 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 /**
- * GET /admin/reviews - Obtener todas las reseñas (admin)
+ * GET /admin/reviews - Obtener todas las reseñas (ADMIN - PROTEGIDA)
  * IMPORTANTE: Debe ir ANTES de /:id para que no lo capture
  */
-router.get('/admin/reviews', async (req: Request, res: Response) => {
+router.get('/admin/reviews', verifyFirebaseToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
   try {
     const { page, limit } = req.query;
     const queryParams = new URLSearchParams();
@@ -86,7 +90,7 @@ router.get('/admin/reviews', async (req: Request, res: Response) => {
 });
 
 /**
- * GET /reviews/:id - Obtener reseña específica
+ * GET /reviews/:id - Obtener reseña específica (PÚBLICO)
  */
 router.get('/:id', async (req: Request, res: Response) => {
   try {
@@ -104,9 +108,9 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 /**
- * PATCH /reviews/:id/status - Cambiar estado de reseña (admin)
+ * PATCH /reviews/:id/status - Cambiar estado de reseña (ADMIN - PROTEGIDA)
  */
-router.patch('/:id/status', async (req: Request, res: Response) => {
+router.patch('/:id/status', verifyFirebaseToken, requireRole(['ADMIN']), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const response = await httpClient.patch<any>(
