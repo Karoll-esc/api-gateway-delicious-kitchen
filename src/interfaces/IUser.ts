@@ -10,7 +10,7 @@
  * Roles permitidos en el sistema.
  * Normalizados a mayúsculas para consistencia.
  */
-export type UserRole = 'ADMIN' | 'KITCHEN' | 'WAITER';
+export type UserRole = 'ADMIN' | 'KITCHEN';
 
 /**
  * Estados posibles de un usuario.
@@ -106,6 +106,6 @@ export interface ISyncAuditResult {
  */
 export function normalizeRole(role: string): UserRole | null {
   const normalized = role?.toUpperCase() as UserRole;
-  const validRoles: UserRole[] = ['ADMIN', 'KITCHEN', 'WAITER'];
+  const validRoles: UserRole[] = ['ADMIN', 'KITCHEN'];
   return validRoles.includes(normalized) ? normalized : null;
 }

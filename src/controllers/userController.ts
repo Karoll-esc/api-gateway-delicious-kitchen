@@ -21,7 +21,7 @@ class UserController {
         if (!normalizedRole) {
           return res.status(400).json({ 
             success: false, 
-            message: `Rol inválido: ${role}. Roles permitidos: ADMIN, KITCHEN, WAITER` 
+            message: `Rol inválido: ${role}. Roles permitidos: ADMIN, KITCHEN` 
           });
         }
 
@@ -63,7 +63,7 @@ class UserController {
           if (!normalizedRole) {
             return res.status(400).json({ 
               success: false, 
-              message: `Rol inválido: ${role}. Roles permitidos: ADMIN, KITCHEN, WAITER` 
+              message: `Rol inválido: ${role}. Roles permitidos: ADMIN, KITCHEN` 
             });
           }
         }
