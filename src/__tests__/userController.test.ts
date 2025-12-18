@@ -1,15 +1,19 @@
 import { Request, Response } from 'express';
 import UserController from '../controllers/userController';
+import userSyncService from '../services/userSyncService';
 import admin from '../config/firebase';
 
-// Mock de Firebase Admin
+// Mock del servicio de sincronización
+jest.mock('../services/userSyncService');
+
+// Mock de Firebase Admin para métodos que no usan userSyncService
 jest.mock('../config/firebase', () => ({
-  auth: jest.fn(() => ({
-    createUser: jest.fn(),
-    updateUser: jest.fn(),
-    setCustomUserClaims: jest.fn(),
-    listUsers: jest.fn(),
-  })),
+  __esModule: true,
+  default: {
+    auth: jest.fn(),
+  },
+  db: {},
+  USERS_COLLECTION: 'users',
 }));
 
 describe('UserController', () => {
@@ -37,14 +41,12 @@ describe('UserController', () => {
       query: {},
     };
 
-    // Mock de auth
+    // Mock de Firebase Auth para resetPassword y listUsers
     mockAuth = {
-      createUser: jest.fn(),
       updateUser: jest.fn(),
-      setCustomUserClaims: jest.fn(),
       listUsers: jest.fn(),
     };
-    (admin.auth as jest.Mock) = jest.fn(() => mockAuth);
+    (admin.auth as jest.Mock).mockReturnValue(mockAuth);
   });
 
   describe('createUser', () => {
@@ -54,28 +56,36 @@ describe('UserController', () => {
         name: 'Juan Pérez',
         email: 'juan@example.com',
         password: 'Password123!',
-        role: 'empleado',
+        role: 'kitchen',
       };
 
       mockRequest.body = userData;
-      mockAuth.createUser.mockResolvedValue({ uid: 'user-123' });
-      mockAuth.setCustomUserClaims.mockResolvedValue(undefined);
+      
+      const mockUser = {
+        uid: 'user-123',
+        email: userData.email,
+        name: userData.name,
+        role: 'KITCHEN' as const,
+        status: 'active' as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      (userSyncService.createUser as jest.Mock).mockResolvedValue(mockUser);
 
       await UserController.createUser(mockRequest as Request, mockResponse as Response);
 
       // Self-validating: Verificaciones claras
-      expect(mockAuth.createUser).toHaveBeenCalledWith({
-        displayName: userData.name,
+      expect(userSyncService.createUser).toHaveBeenCalledWith({
         email: userData.email,
         password: userData.password,
-        emailVerified: false,
-        disabled: false,
+        name: userData.name,
+        role: 'KITCHEN',
       });
-      expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith('user-123', { role: 'empleado' });
       expect(mockStatus).toHaveBeenCalledWith(201);
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
-        message: 'Usuario creado',
+        message: 'Usuario creado y sincronizado correctamente',
         uid: 'user-123',
       });
     });
@@ -85,12 +95,12 @@ describe('UserController', () => {
       mockRequest.body = {
         email: 'juan@example.com',
         password: 'Password123!',
-        role: 'empleado',
+        role: 'kitchen',
       };
 
       await UserController.createUser(mockRequest as Request, mockResponse as Response);
 
-      expect(mockAuth.createUser).not.toHaveBeenCalled();
+      expect(userSyncService.createUser).not.toHaveBeenCalled();
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({
         success: false,
@@ -102,12 +112,12 @@ describe('UserController', () => {
       mockRequest.body = {
         name: 'Juan Pérez',
         password: 'Password123!',
-        role: 'empleado',
+        role: 'kitchen',
       };
 
       await UserController.createUser(mockRequest as Request, mockResponse as Response);
 
-      expect(mockAuth.createUser).not.toHaveBeenCalled();
+      expect(userSyncService.createUser).not.toHaveBeenCalled();
       expect(mockStatus).toHaveBeenCalledWith(400);
     });
 
@@ -115,12 +125,12 @@ describe('UserController', () => {
       mockRequest.body = {
         name: 'Juan Pérez',
         email: 'juan@example.com',
-        role: 'empleado',
+        role: 'kitchen',
       };
 
       await UserController.createUser(mockRequest as Request, mockResponse as Response);
 
-      expect(mockAuth.createUser).not.toHaveBeenCalled();
+      expect(userSyncService.createUser).not.toHaveBeenCalled();
       expect(mockStatus).toHaveBeenCalledWith(400);
     });
 
@@ -133,7 +143,7 @@ describe('UserController', () => {
 
       await UserController.createUser(mockRequest as Request, mockResponse as Response);
 
-      expect(mockAuth.createUser).not.toHaveBeenCalled();
+      expect(userSyncService.createUser).not.toHaveBeenCalled();
       expect(mockStatus).toHaveBeenCalledWith(400);
     });
 
@@ -143,11 +153,11 @@ describe('UserController', () => {
         name: 'Juan Pérez',
         email: 'juan@example.com',
         password: 'Password123!',
-        role: 'empleado',
+        role: 'kitchen',
       };
 
       const firebaseError = new Error('El email ya existe');
-      mockAuth.createUser.mockRejectedValue(firebaseError);
+      (userSyncService.createUser as jest.Mock).mockRejectedValue(firebaseError);
 
       await UserController.createUser(mockRequest as Request, mockResponse as Response);
 
@@ -167,11 +177,26 @@ describe('UserController', () => {
         role: 'admin',
       };
 
-      mockAuth.createUser.mockResolvedValue({ uid: 'admin-123' });
+      const mockUser = {
+        uid: 'admin-123',
+        email: 'admin@example.com',
+        name: 'Admin User',
+        role: 'ADMIN',
+        status: 'active',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      (userSyncService.createUser as jest.Mock).mockResolvedValue(mockUser);
 
       await UserController.createUser(mockRequest as Request, mockResponse as Response);
 
-      expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith('admin-123', { role: 'admin' });
+      expect(userSyncService.createUser).toHaveBeenCalledWith({
+        email: 'admin@example.com',
+        password: 'AdminPass123!',
+        name: 'Admin User',
+        role: 'ADMIN',
+      });
       expect(mockStatus).toHaveBeenCalledWith(201);
     });
   });
@@ -181,17 +206,17 @@ describe('UserController', () => {
       mockRequest.params = { uid: 'user-123' };
       mockRequest.body = { name: 'Nuevo Nombre' };
 
-      mockAuth.updateUser.mockResolvedValue(undefined);
+      (userSyncService.updateUser as jest.Mock).mockResolvedValue(undefined);
 
       await UserController.editUser(mockRequest as Request, mockResponse as Response);
 
-      expect(mockAuth.updateUser).toHaveBeenCalledWith('user-123', {
-        displayName: 'Nuevo Nombre',
+      expect(userSyncService.updateUser).toHaveBeenCalledWith('user-123', {
+        name: 'Nuevo Nombre',
+        role: undefined,
       });
-      expect(mockAuth.setCustomUserClaims).not.toHaveBeenCalled();
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
-        message: 'Usuario actualizado',
+        message: 'Usuario actualizado y sincronizado correctamente',
       });
     });
 
@@ -199,15 +224,17 @@ describe('UserController', () => {
       mockRequest.params = { uid: 'user-123' };
       mockRequest.body = { role: 'admin' };
 
-      mockAuth.setCustomUserClaims.mockResolvedValue(undefined);
+      (userSyncService.updateUser as jest.Mock).mockResolvedValue(undefined);
 
       await UserController.editUser(mockRequest as Request, mockResponse as Response);
 
-      expect(mockAuth.updateUser).not.toHaveBeenCalled();
-      expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith('user-123', { role: 'admin' });
+      expect(userSyncService.updateUser).toHaveBeenCalledWith('user-123', {
+        name: undefined,
+        role: 'ADMIN',
+      });
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
-        message: 'Usuario actualizado',
+        message: 'Usuario actualizado y sincronizado correctamente',
       });
     });
 
@@ -215,15 +242,14 @@ describe('UserController', () => {
       mockRequest.params = { uid: 'user-123' };
       mockRequest.body = { name: 'Nuevo Nombre', role: 'admin' };
 
-      mockAuth.updateUser.mockResolvedValue(undefined);
-      mockAuth.setCustomUserClaims.mockResolvedValue(undefined);
+      (userSyncService.updateUser as jest.Mock).mockResolvedValue(undefined);
 
       await UserController.editUser(mockRequest as Request, mockResponse as Response);
 
-      expect(mockAuth.updateUser).toHaveBeenCalledWith('user-123', {
-        displayName: 'Nuevo Nombre',
+      expect(userSyncService.updateUser).toHaveBeenCalledWith('user-123', {
+        name: 'Nuevo Nombre',
+        role: 'ADMIN',
       });
-      expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith('user-123', { role: 'admin' });
     });
 
     it('debería retornar error 400 si falta el uid', async () => {
@@ -232,7 +258,7 @@ describe('UserController', () => {
 
       await UserController.editUser(mockRequest as Request, mockResponse as Response);
 
-      expect(mockAuth.updateUser).not.toHaveBeenCalled();
+      expect(userSyncService.updateUser).not.toHaveBeenCalled();
       expect(mockStatus).toHaveBeenCalledWith(400);
     });
 
@@ -242,7 +268,7 @@ describe('UserController', () => {
 
       await UserController.editUser(mockRequest as Request, mockResponse as Response);
 
-      expect(mockAuth.updateUser).not.toHaveBeenCalled();
+      expect(userSyncService.updateUser).not.toHaveBeenCalled();
       expect(mockStatus).toHaveBeenCalledWith(400);
     });
 
@@ -251,7 +277,7 @@ describe('UserController', () => {
       mockRequest.body = { name: 'Nuevo Nombre' };
 
       const firebaseError = new Error('Usuario no encontrado');
-      mockAuth.updateUser.mockRejectedValue(firebaseError);
+      (userSyncService.updateUser as jest.Mock).mockRejectedValue(firebaseError);
 
       await UserController.editUser(mockRequest as Request, mockResponse as Response);
 
@@ -267,14 +293,14 @@ describe('UserController', () => {
   describe('disableUser', () => {
     it('debería desactivar un usuario exitosamente', async () => {
       mockRequest.params = { uid: 'user-123' };
-      mockAuth.updateUser.mockResolvedValue(undefined);
+      (userSyncService.disableUser as jest.Mock).mockResolvedValue(undefined);
 
       await UserController.disableUser(mockRequest as Request, mockResponse as Response);
 
-      expect(mockAuth.updateUser).toHaveBeenCalledWith('user-123', { disabled: true });
+      expect(userSyncService.disableUser).toHaveBeenCalledWith('user-123');
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
-        message: 'Usuario desactivado',
+        message: 'Usuario desactivado y sincronizado correctamente',
       });
     });
 
@@ -283,7 +309,7 @@ describe('UserController', () => {
 
       await UserController.disableUser(mockRequest as Request, mockResponse as Response);
 
-      expect(mockAuth.updateUser).not.toHaveBeenCalled();
+      expect(userSyncService.disableUser).not.toHaveBeenCalled();
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({
         success: false,
@@ -294,7 +320,7 @@ describe('UserController', () => {
     it('debería manejar errores al desactivar usuario', async () => {
       mockRequest.params = { uid: 'user-123' };
       const firebaseError = new Error('Error al desactivar');
-      mockAuth.updateUser.mockRejectedValue(firebaseError);
+      (userSyncService.disableUser as jest.Mock).mockRejectedValue(firebaseError);
 
       await UserController.disableUser(mockRequest as Request, mockResponse as Response);
 
