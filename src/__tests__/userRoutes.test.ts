@@ -6,6 +6,15 @@ import userController from '../controllers/userController';
 // Mock del controlador
 jest.mock('../controllers/userController');
 
+// Mock de los middlewares de autenticación y autorización
+jest.mock('../middleware/verifyFirebaseToken', () => ({
+  verifyFirebaseToken: (req: any, res: any, next: any) => next(),
+}));
+
+jest.mock('../middleware/requireRole', () => ({
+  requireRole: () => (req: any, res: any, next: any) => next(),
+}));
+
 describe('UserRoutes - Principios FIRST', () => {
   let app: Express;
 
