@@ -6,6 +6,15 @@ import * as kitchenController from '../controllers/kitchenController';
 // Mock del controlador
 jest.mock('../controllers/kitchenController');
 
+// Mock de los middlewares de autenticación y autorización
+jest.mock('../middleware/verifyFirebaseToken', () => ({
+  verifyFirebaseToken: (req: any, res: any, next: any) => next(),
+}));
+
+jest.mock('../middleware/requireRole', () => ({
+  requireRole: () => (req: any, res: any, next: any) => next(),
+}));
+
 describe('KitchenRoutes - Principios FIRST', () => {
   let app: Express;
 

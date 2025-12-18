@@ -1,4 +1,5 @@
 import admin from 'firebase-admin';
+import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import path from 'path';
 
 // Inicialización de Firebase Admin SDK
@@ -20,5 +21,17 @@ if (!admin.apps.length) {
     });
   }
 }
+
+/**
+ * Instancia de Firestore para operaciones de base de datos.
+ * Utilizada para sincronización de datos de usuario (HU-009).
+ */
+export const db: Firestore = getFirestore();
+
+/**
+ * Nombre de la colección de usuarios en Firestore.
+ * Centralizado para evitar errores de tipeo.
+ */
+export const USERS_COLLECTION = 'users';
 
 export default admin;

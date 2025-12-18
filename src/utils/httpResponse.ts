@@ -18,6 +18,20 @@ export class HttpResponse {
     });
   }
 
+  static unauthorized(res: Response, message: string = 'No autorizado'): void {
+    res.status(401).json({
+      success: false,
+      message,
+    });
+  }
+
+  static forbidden(res: Response, message: string = 'Acceso prohibido'): void {
+    res.status(403).json({
+      success: false,
+      message,
+    });
+  }
+
   static fromServiceResponse<T>(res: Response, serviceResponse: ServiceResponse<T>): void {
     if (serviceResponse.success) {
       this.success(res, serviceResponse.data, undefined, serviceResponse.status || 200);
